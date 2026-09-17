@@ -21,7 +21,7 @@
 <body>
 <div class="game-window">
     <div class="screen">
-        <img id="locImg" class="loc-img" src="https://githubusercontent.com">
+        <img id="locImg" class="loc-img" src="">
         <div id="locDesc" class="loc-text">Загрузка мира вечной ночи...</div>
     </div>
     <div class="stats">
@@ -42,17 +42,27 @@
     const locations = {
         "Полянка на Нейтралках": {
             img: "https://githubusercontent.com",
-            desc: "Вечный мрак. Трава светится ядовито-зеленым. Кружат фиолетовые светлячки. Луна была убита здесь собакой... Опасно!",
-            exits: ["Гигантское Дупло", "Старое Гнездо Двуногих", "Подземный Коллектор"]
+            desc: "Авторская Полянка. Вечный мрак. Трава светится ядовито-зеленым, а в небе застыла туманная пыль. Луна убита собакой... Опасно!",
+            exits: ["Старое Гнездо Двуногих", "Подземный Коллектор", "Ствол Дерева"]
+        },
+        "Ствол Дерева": {
+            img: "https://githubusercontent.com",
+            desc: "Вертикальный ствол гигантского дерева. Толстая древняя кора покрыта фиолетовым мхом. Лапы немного скользят.",
+            exits: ["Полянка на Нейтралках", "Гигантское Дупло", "Нижние прочные ветви"]
         },
         "Гигантское Дупло": {
             img: "https://githubusercontent.com",
-            desc: "Лагерь Племени Теплого Света. Огромное дупло древнего дерева. Коты греются в коконах из фиолетовых светлячков. Здесь рождаются крылатые котята.",
-            exits: ["Полянка на Нейтралках"]
+            desc: "Лагерь Племени Теплого Света. Огромное уютное дупло. Коты греются в коконах из фиолетовых светлячков. Здесь рождаются крылатые котята.",
+            exits: ["Ствол Дерева"]
+        },
+        "Нижние прочные ветви": {
+            img: "https://githubusercontent.com",
+            desc: "Толстые ветви Племени Тёплого Света. На кору налипла изморозь. Здесь можно искать полезный целебный мох для Племени.",
+            exits: ["Ствол Дерева"]
         },
         "Старое Гнездо Двуногих": {
             img: "https://githubusercontent.com",
-            desc: "Лагерь Племени Пылающего Огня. Разрушенный дом Двуногих, где воители греются углищами. Во дворе лежат ледяные цветы, рассыпающиеся при касании.",
+            desc: "Лагерь Племени Пылающего Огня. Разрушенный дом Двуногих, где воители греются углищами. Во дворе лежат ледяные цветы.",
             exits: ["Полянка на Нейтралках"]
         },
         "Подземный Коллектор": {
@@ -62,16 +72,16 @@
         },
         "Лабиринт темных нор": {
             img: "https://githubusercontent.com",
-            desc: "Опасные подземные туннели вне лагеря Глубинного племени. Здесь абсолютная тьма, но благодаря длинным усам тут самая легкая стопроцентная охота!",
+            desc: "Опасные подземные туннели вне лагеря Глубинного племени. Здесь абсолютная тьма, но благодаря усам тут стопроцентная охота!",
             exits: ["Подземный Коллектор"]
         }
     };
-    let cat = { location: "Полянка на Нейтралках", hp: 100, hunger: 100, mice: 0, coals: 0, mutation: 0 };
+    let cat = { location: "Полянка на Нейтралках", hp: 100, hunger: 100, mice: 0, coals: 0, moss: 0, mutation: 0 };
     function loadGame() {
         let save = localStorage.getItem('github_cat_save');
         if (save) cat = JSON.parse(save);
         updateUI();
-        log("Вы очнулись во вечной тьме. Прогресс сохранен.");
+        log("Вы очнулись на своей Полянке во вечной тьме.");
     }
     function saveGame() { localStorage.setItem('github_cat_save', JSON.stringify(cat)); }
     function log(msg) {
@@ -89,15 +99,18 @@
         let invText = [];
         if (cat.mice > 0) invText.push(`Мышь (${cat.mice} шт.)`);
         if (cat.coals > 0) invText.push(`Угли (${cat.coals} шт.)`);
+        if (cat.moss > 0) invText.push(`Мох (${cat.moss} шт.)`);
         document.getElementById('txtInv').innerText = invText.length > 0 ? invText.join(', ') : "Ничего";
         let statusTag = document.getElementById('txtStatus');
         if (cat.mutation === 0) { statusTag.innerText = "Здоров"; statusTag.style.color = "#2ecc71"; }
         if (cat.mutation === 1) { statusTag.innerText = "1 Стадия: Черный Кашель 🦠"; statusTag.style.color = "#f39c12"; }
-        if (cat.mutation === 2) { statusTag.innerText = "2 Стадия: Искажающий Дар 👁️ (Рога и Ночное зрение!)"; statusTag.style.color = "#9b59b6"; }
+        if (cat.mutation === 2) { statusTag.innerText = "2 Стадия: Искажающий Дар 👁️ (Рога!)"; statusTag.style.color = "#9b59b6"; }
         if (cat.mutation === 3) { statusTag.innerText = "3 Стадия: БЕЗУМИЕ 💀"; statusTag.style.color = "#e74c3c"; }
         let specArea = document.getElementById('specialAction');
         if (cat.location === "Старое Гнездо Двуногих") {
             specArea.innerHTML = `<button class="btn" style="background:#e67e22; border-color:#d35400;" onclick="gameAction('search_coals')">🔥 Искать угли в печи</button>`;
+        } else if (cat.location === "Нижние прочные ветви") {
+            specArea.innerHTML = `<button class="btn" style="background:#27ae60; border-color:#219653;" onclick="gameAction('gather_moss')">🌿 Собирать лечебный мох</button>`;
         } else if (cat.mutation > 0 && cat.coals > 0) {
             specArea.innerHTML = `<button class="btn" style="background:#c0392b; border-color:#962d22;" onclick="gameAction('burn_wound')">🩸 Прижечь заразу углями</button>`;
         } else { specArea.innerHTML = ""; }
@@ -110,6 +123,12 @@
     function moveTo(target) {
         if (cat.mutation === 3) { log("Вы безумны и бегаете кругами во тьме!"); return; }
         if (cat.hunger < 5) { log("Вы слишком ослабли от голода для перехода."); return; }
+        
+        if (target === "Нижние прочные ветви" && cat.hunger < 25 && Math.random() < 0.4) {
+            cat.hp = Math.max(10, cat.hp - 20);
+            log("🚨 Вы ослабли от голода, поскользнулись на ветке и упали! Потеряно 20 HP.");
+        }
+        
         cat.location = target; cat.hunger = Math.max(0, cat.hunger - 5);
         log(`Вы перешли в: ${target}. Потрачено 5 сытости.`);
         if (target === "Полянка на Нейтралках" && Math.random() < 0.25) {
@@ -121,28 +140,8 @@
     function gameAction(type) {
         if (cat.mutation === 3) return;
         if (type === 'hunt') {
-            if (cat.hunger < 12) { log("Вы слишком голодны для охоты."); return; }
+            if (cat.hunger < 12) { log("Вы слишком голодны для hunting."); return; }
             cat.hunger -= 10;
             let chance = (cat.location === "Лабиринт темных нор" || cat.mutation === 2) ? 1.0 : 0.5;
             if (Math.random() < chance) {
-                cat.mice++; log("🦅 Вы поймали подземную мышь!");
-                if (Math.random() < 0.25 && cat.mutation === 0) { cat.mutation = 1; log("🦠 Мышь питалась светящейся травой! У вас начался Черный Кашель."); }
-            } else { log("💨 Мышь юркнула под корень дерева во тьме."); }
-        }
-        if (type === 'eat') {
-            if (cat.mice <= 0) { log("Нет мышей в лапах."); return; }
-            cat.mice--; cat.hunger = Math.min(100, cat.hunger + 30); log("🍖 Вы съели сочную мышь. Сытость восстановлена.");
-        }
-        if (type === 'search_coals') {
-            cat.hunger = Math.max(0, cat.hunger - 3);
-            if (Math.random() < 0.5) { cat.coals++; log("🔥 Найдена теплая головешка в печи!"); } else { log("❌ В печи только холодная сажа."); }
-        }
-        if (type === 'burn_wound') {
-            if (cat.coals <= 0) return;
-            cat.coals--; cat.hp = Math.max(10, cat.hp - 20); cat.mutation = 0; log("🩸 Вы прижгли заразу углями за один день! Разум чист, вы снова здоровы.");
-        }
-        saveGame(); updateUI();
-    }
-    setInterval(() => {
-        if (cat.hunger > 0) {
-            cat.hunger--;
+                cat.mice++; log("🦅 Вы поймали мышь!");
