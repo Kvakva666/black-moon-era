@@ -144,4 +144,4 @@
             cat.hunger -= 10;
             let chance = (cat.location === "Лабиринт темных нор" || cat.mutation === 2) ? 1.0 : 0.5;
             if (Math.random() < chance) {
-                cat.mice++; log("🦅 Вы поймали мышь!");
+                cat.mice++; log("🦅 Вы поймали мышь!"); 
