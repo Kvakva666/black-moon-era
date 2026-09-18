@@ -41,7 +41,7 @@
 <script>
     const locations = {
         "Полянка на Нейтралках": {
-            img: "https://unsplash.com", // Заглушка, чтобы не ломался тег картинки
+            img: "https://unsplash.com", 
             desc: "Авторская Полянка. Вечный мрак. Трава светится ядовито-зеленым, а в небе застыла туманная пыль. Луна убита собакой... Опасно!",
             exits: ["Старое Гнездо Двуногих", "Подземный Коллектор", "Ствол Дерева"]
         },
@@ -82,7 +82,6 @@
     function loadGame() {
         let save = localStorage.getItem('github_cat_save');
         if (save) cat = JSON.parse(save);
-        // Защитная проверка здоровья при загрузке
         if (cat.hp <= 0) {
             resetGame();
         } else {
@@ -98,7 +97,6 @@
         if(box) { box.innerHTML += `<div>• ${msg}</div>`; box.scrollTop = box.scrollHeight; }
     }
 
-    // Функция хардкорного сброса игры при 0 здоровья
     function resetGame() {
         alert("🚨 Кот Смерть потерял всё здоровье... Мир вечной ночи поглотил его разум. Начните приключение заново!");
         cat = { location: "Полянка на Нейтралках", hp: 100, hunger: 100, mice: 0, coals: 0, moss: 0, mutation: 0 };
@@ -107,7 +105,6 @@
         log("Вы возродились на Полянке на Нейтралках. Параметры сброшены.");
     }
 
-    // Функция проверки урона и критических состояний
     function checkHealth() {
         if (cat.hp <= 0) {
             cat.hp = 0;
@@ -145,7 +142,6 @@
             specArea.innerHTML = `<button class="btn" style="background:#c0392b; border-color:#962d22;" onclick="gameAction('burn_wound')">🩸 Прижечь заразу углями</button>`;
         } else { specArea.innerHTML = ""; }
 
-        // Обновление и вывод кнопок переходов в блоке ПЕРЕМЕЩЕНИЕ:
         let navArea = document.getElementById('navigationArea');
         navArea.innerHTML = "";
         loc.exits.forEach(exit => {
@@ -156,12 +152,20 @@
     function moveTo(target) {
         if (cat.mutation === 3) { log("Вы безумны и бегаете кругами во тьме!"); return; }
         if (cat.hunger < 5) { 
-            log("❌ Вы слишком ослабли от голода для перехода. Сначала поохотьтесь или съешьте мышь!"); 
-            cat.hp = Math.max(0, cat.hp - 10); // Голод забирает здоровье при попытке идти
+            log("❌ Вы слишком ослабли от голода для перехода. Теряется 10 HP!"); 
+            cat.hp = Math.max(0, cat.hp - 10);
             checkHealth();
             updateUI();
             return; 
         }
         
         if (target === "Нижние прочные ветви" && cat.hunger < 25 && Math.random() < 0.4) {
-            
+            cat.hp = Math.max(0, cat.hp - 20);
+            log("🚨 Вы ослабли от голода, поскользнулись на ветке и упали! Потеряно 20 HP.");
+            checkHealth();
+        }
+        
+        cat.location = target; 
+        cat.hunger = Math.max(0, cat.hunger - 5);
+        log(`Вы перешли в: ${target}. Потрачено 5 сытости.`) 
+    
