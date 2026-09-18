@@ -148,7 +148,7 @@
             navArea.innerHTML += `<button class="btn-move" onclick="moveTo('${exit}')">🐾 Перейти в: ${exit}</button>`;
         });
     }
-
+  
     function moveTo(target) {
         if (cat.mutation === 3) { log("Вы безумны и бегаете кругами во тьме!"); return; }
         if (cat.hunger < 5) { 
@@ -163,8 +163,7 @@
             cat.hp = Math.max(0, cat.hp - 20);
             log("🚨 Вы ослабли от голода, поскользнулись на ветке и упали! Потеряно 20 HP.");
             checkHealth();
-        }
-        
+        }  
         cat.location = target; 
         cat.hunger = Math.max(0, cat.hunger - 5);
         log(`Вы перешли в: ${target}. Потрачено 5 сытости.`);
