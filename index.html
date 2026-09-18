@@ -8,25 +8,27 @@
         body { font-family: Arial, sans-serif; background: #0b0b0b; color: #e0e0e0; margin: 0; padding: 15px; display: flex; flex-direction: column; align-items: center; }
         .game-window { width: 100%; max-width: 450px; background: #141414; border: 2px solid #3a1c5c; border-radius: 12px; padding: 15px; box-sizing: border-box; }
         .screen { width: 100%; aspect-ratio: 1/1; position: relative; background: #000; border-radius: 8px; overflow: hidden; border: 1px solid #3a1c5c; }
-        .loc-img { width: 100%; height: 100%; object-fit: cover; }
+        .loc-img { width: 100%; height: 100%; object-fit: cover; display: block; background: #111; }
         .loc-text { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.85); padding: 10px; font-size: 13px; text-align: center; border-top: 1px solid #3a1c5c; }
         .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 15px 0; background: #1c1c1c; padding: 10px; border-radius: 6px; font-size: 13px; }
-        .bar { background: #2b2b2b; height: 10px; border-radius: 4px; overflow: hidden; margin-top: 4px; }
-        .fill { height: 100%; transition: width 0.3s; }
+        .bar { background: #2b2b2b; height: 10px; border-radius: 4px; overflow: hidden; margin-top: 4px; position: relative; }
+        .fill { height: 100%; width: 100%; transition: width 0.3s, background-color 0.3s, box-shadow 0.3s; }
         .btn { background: #3a1c5c; color: #fff; border: 1px solid #5c2d91; padding: 12px; margin: 6px 0; border-radius: 6px; cursor: pointer; width: 100%; font-weight: bold; font-size: 14px; box-sizing: border-box; }
-        .btn-move { background: #1c2d5a; border-color: #294488; padding: 10px; font-size: 13px; margin: 4px 0; width: 100%; text-align: left; color: #fff; border-radius: 6px; cursor: pointer; font-weight: bold; }
-        .log { background: #080808; border: 1px solid #222; height: 110px; overflow-y: auto; padding: 8px; border-radius: 6px; font-size: 12px; margin-top: 10px; color: #a0a0a0; }
+        .btn:hover { background: #4c2577; }
+        .btn-move { background: #1c2d5a; border-color: #294488; padding: 10px; font-size: 13px; margin: 4px 0; width: 100%; text-align: left; color: #fff; border-radius: 6px; cursor: pointer; font-weight: bold; border-style: solid; border-width: 1px; }
+        .btn-move:hover { background: #263d7a; }
+        .log { background: #080808; border: 1px solid #222; height: 110px; overflow-y: auto; padding: 8px; border-radius: 6px; font-size: 12px; margin-top: 10px; color: #a0a0a0; box-sizing: border-box; }
     </style>
 </head>
 <body>
 <div class="game-window">
     <div class="screen">
-        <img id="locImg" class="loc-img" src="">
+        <img id="locImg" class="loc-img" src="" alt="Локация">
         <div id="locDesc" class="loc-text">Загрузка мира вечной ночи...</div>
     </div>
     <div class="stats">
-        <div>❤️ Здоровье: <span id="txtHp">100</span>/100<div class="bar"><div id="barHp" class="fill" style="background:#cf1414; width:100%;"></div></div></div>
-        <div>🍖 Сытость: <span id="txtHunger">100</span>/100<div class="bar"><div id="barHunger" class="fill" style="background:#f1c40f; width:100%;"></div></div></div>
+        <div>❤️ Здоровье: <span id="txtHp">100</span>/100<div class="bar"><div id="barHp" class="fill" style="background:#cf1414;"></div></div></div>
+        <div>🍖 Сытость: <span id="txtHunger">100</span>/100<div class="bar"><div id="barHunger" class="fill" style="background:#f1c40f;"></div></div></div>
         <div style="grid-column: span 2; border-top: 1px solid #222; padding-top: 5px;">🎒 В лапах: <b id="txtInv" style="color:#1abc9c;">Ничего</b><br>⚠️ Состояние: <span id="txtStatus">Здоров</span></div>
     </div>
     <div id="actionArea">
@@ -38,6 +40,7 @@
     <div id="navigationArea" style="display: block;"></div>
     <div class="log" id="gameLog"></div>
 </div>
+
 <script>
     const locations = {
         "Полянка на Нейтралках": {
@@ -52,12 +55,12 @@
         },
         "Гигантское Дупло": {
             img: "https://unsplash.com",
-            desc: "Лагерь Племени Теплого Света. Огромное уютное дупло. Коты греются в коконах из фиолетовых светлячков. Здесь рождаются крылатые котята.",
+            desc: "Поселение Луноявь. Огромное уютное дупло. Коты греются в коконах из фиолетовых светлячков. Здесь рождаются крылатые котята.",
             exits: ["Ствол Дерева"]
         },
         "Нижние прочные ветви": {
             img: "https://unsplash.com",
-            desc: "Толстые ветви Племени Тёплого Света. На кору налипла изморозь. Здесь можно искать полезный целебный мох для Племени.",
+            desc: "Толстые ветви. На кору налипла изморозь. Здесь можно искать полезный целебный мох для Племени.",
             exits: ["Ствол Дерева"]
         },
         "Старое Гнездо Двуногих": {
@@ -81,20 +84,31 @@
 
     function loadGame() {
         let save = localStorage.getItem('github_cat_save');
-        if (save) cat = JSON.parse(save);
+        if (save) {
+            try {
+                cat = JSON.parse(save);
+            } catch(e) {
+                console.error("Ошибка загрузки сохранения, сброс.");
+            }
+        }
         if (cat.hp <= 0) {
             resetGame();
         } else {
             updateUI();
-            log("Вы очнулись на своей Полянке во вечной тьме.");
+            log("Вы очнулись во вечной тьме.");
         }
     }
 
-    function saveGame() { localStorage.setItem('github_cat_save', JSON.stringify(cat)); }
+    function saveGame() { 
+        localStorage.setItem('github_cat_save', JSON.stringify(cat)); 
+    }
 
     function log(msg) {
         let box = document.getElementById('gameLog');
-        if(box) { box.innerHTML += `<div>• ${msg}</div>`; box.scrollTop = box.scrollHeight; }
+        if(box) { 
+            box.innerHTML += `<div>• ${msg}</div>`; 
+            box.scrollTop = box.scrollHeight; 
+        }
     }
 
     function resetGame() {
@@ -109,17 +123,35 @@
         if (cat.hp <= 0) {
             cat.hp = 0;
             resetGame();
+            return true;
         }
+        return false;
     }
 
     function updateUI() {
         let loc = locations[cat.location];
+        if (!loc) {
+            cat.location = "Полянка на Нейтралках";
+            loc = locations[cat.location];
+        }
+
         document.getElementById('locImg').src = loc.img;
         document.getElementById('locDesc').innerText = loc.desc;
         document.getElementById('txtHp').innerText = cat.hp;
         document.getElementById('barHp').style.width = cat.hp + "%";
         document.getElementById('txtHunger').innerText = cat.hunger;
-        document.getElementById('barHunger').style.width = cat.hunger + "%";
+        
+        let hungerBar = document.getElementById('barHunger');
+        hungerBar.style.width = cat.hunger + "%";
+        
+        // Эффект Космического Хвоста Смерти при 100% сытости
+        if (cat.hunger === 100) {
+            hungerBar.style.backgroundColor = "#9400d3";
+            hungerBar.style.boxShadow = "0 0 10px #8a2be2, 0 0 15px #ba55d3";
+        } else {
+            hungerBar.style.backgroundColor = "#f1c40f";
+            hungerBar.style.boxShadow = "none";
+        }
         
         let invText = [];
         if (cat.mice > 0) invText.push(`Мышь (${cat.mice} шт.)`);
@@ -129,43 +161,20 @@
         
         let statusTag = document.getElementById('txtStatus');
         if (cat.mutation === 0) { statusTag.innerText = "Здоров"; statusTag.style.color = "#2ecc71"; }
-        if (cat.mutation === 1) { statusTag.innerText = "1 Стадия: Черный Кашель 🦠"; statusTag.style.color = "#f39c12"; }
-        if (cat.mutation === 2) { statusTag.innerText = "2 Стадия: Искажающий Дар 👁️ (Рога!)"; statusTag.style.color = "#9b59b6"; }
-        if (cat.mutation === 3) { statusTag.innerText = "3 Стадия: БЕЗУМИЕ 💀"; statusTag.style.color = "#e74c3c"; }
+        else if (cat.mutation === 1) { statusTag.innerText = "1 Стадия: Черный Кашель 🦠"; statusTag.style.color = "#f39c12"; }
+        else if (cat.mutation === 2) { statusTag.innerText = "2 Стадия: Искажающий Дар 👁️ (Рога!)"; statusTag.style.color = "#9b59b6"; }
+        else if (cat.mutation === 3) { statusTag.innerText = "3 Стадия: БЕЗУМИЕ 💀"; statusTag.style.color = "#e74c3c"; }
         
         let specArea = document.getElementById('specialAction');
         if (cat.location === "Старое Гнездо Двуногих") {
-            specArea.innerHTML = `<button class="btn" style="background:#e67e22; border-color:#d35400;" onclick="gameAction('search_coals')">🔥 Искать угли в печи</button>`;
+            specArea.innerHTML = `<button class="btn" style="background:#e67e22; border-color:#d35400;" onclick="gameAction('search_coals')">🔥 Икаться угли в печи</button>`;
         } else if (cat.location === "Нижние прочные ветви") {
             specArea.innerHTML = `<button class="btn" style="background:#27ae60; border-color:#219653;" onclick="gameAction('gather_moss')">🌿 Собирать лечебный мох</button>`;
         } else if (cat.mutation > 0 && cat.coals > 0) {
             specArea.innerHTML = `<button class="btn" style="background:#c0392b; border-color:#962d22;" onclick="gameAction('burn_wound')">🩸 Прижечь заразу углями</button>`;
-        } else { specArea.innerHTML = ""; }
+        } else { 
+            specArea.innerHTML = ""; 
+        }
 
         let navArea = document.getElementById('navigationArea');
-        navArea.innerHTML = "";
-        loc.exits.forEach(exit => {
-            navArea.innerHTML += `<button class="btn-move" onclick="moveTo('${exit}')">🐾 Перейти в: ${exit}</button>`;
-        });
-    }
-  
-    function moveTo(target) {
-        if (cat.mutation === 3) { log("Вы безумны и бегаете кругами во тьме!"); return; }
-        if (cat.hunger < 5) { 
-            log("❌ Вы слишком ослабли от голода для перехода. Теряется 10 HP!"); 
-            cat.hp = Math.max(0, cat.hp - 10);
-            checkHealth();
-            updateUI();
-            return; 
-        }
-        
-        if (target === "Нижние прочные ветви" && cat.hunger < 25 && Math.random() < 0.4) {
-            cat.hp = Math.max(0, cat.hp - 20);
-            log("🚨 Вы ослабли от голода, поскользнулись на ветке и упали! Потеряно 20 HP.");
-            checkHealth();
-        }  
-        cat.location = target; 
-        cat.hunger = Math.max(0, cat.hunger - 5);
-        log(`Вы перешли в: ${target}. Потрачено 5 сытости.`);
-
     
