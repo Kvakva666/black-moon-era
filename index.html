@@ -219,4 +219,80 @@
             hungerBar.style.boxShadow = "0 0 10px #8a2be2, 0 0 15px #ba55d3";
         } else {
             hungerBar.style.backgroundColor = "#f1c40f";
-    
+               hungerBar.style.backgroundColor = "#f1c40f";
+            hungerBar.style.boxShadow = "none";
+        }
+        
+        document.getElementById('txtAge').innerText = `${cat.age_moons} лун (${cat.age_days}/5 дн.)`;
+        
+        let invText = [];
+        if (cat.mice > 0) invText.push(`Мышь (${cat.mice} шт.)`);
+        if (cat.coals > 0) invText.push(`Угли (${cat.coals} шт.)`);
+        if (cat.moss > 0) invText.push(`Мох (${cat.moss} шт.)`);
+        if (cat.sticks > 0) invText.push(`Палка (${cat.sticks} шт.)`);
+        if (cat.leaves > 0) invText.push(`Лист (${cat.leaves} шт.)`);
+        if (cat.trash > 0) invText.push(`Мусор (${cat.trash} шт.)`);
+        if (cat.fireflies > 0) invText.push(`Светлячок (${cat.fireflies} шт.)`);
+        if (cat.has_toy) invText.push("🧸 Защитная Игрушка Смерти");
+        if (cat.has_costume) invText.push("🍁 Нарядный Костюм из листьев и ягод");
+        if (cat.has_nest) invText.push("🪶 Пуховое Гнёздышко Смерти");
+        
+        document.getElementById('txtInv').innerText = invText.length > 0 ? invText.join(', ') : "Ничего";
+        
+        let statusTag = document.getElementById('txtStatus');
+        if (cat.mutation === 3 && !cat.has_toy) { 
+            statusTag.innerText = "3 Стадия: БЕЗУМИЕ 💀"; 
+            statusTag.style.color = "#e74c3c"; 
+        } else if (cat.mutation === 3 && cat.has_toy) {
+            statusTag.innerText = "3 Стадия: БЕЗУМИЕ ЗАБЛОКИРОВАНО 🧸"; 
+            statusTag.style.color = "#3498db";
+        } else if (cat.mutation === 2) { 
+            statusTag.innerText = "2 Стадия: Искажающий Дар 👁️ (Рога!)"; 
+            statusTag.style.color = "#9b59b6"; 
+        } else if (cat.mutation === 1) { 
+            statusTag.innerText = "1 Стадия: Черный Кашель 🦠"; 
+            statusTag.style.color = "#f39c12"; 
+        } else { 
+            statusTag.innerText = "Здоров"; 
+            statusTag.style.color = "#2ecc71"; 
+        }
+        
+        let specArea = document.getElementById('specialAction');
+        specArea.innerHTML = "";
+
+        if (cat.location === "Старое Гнездо Двуногих") {
+            specArea.innerHTML = `<button class="btn" style="background:#e67e22; border-color:#d35400;" onclick="gameAction('search_coals')">🔥 Искать угли в печи</button>`;
+        } else if (cat.location === "Нижние прочные ветви") {
+            specArea.innerHTML = `<button class="btn" style="background:#27ae60; border-color:#219653;" onclick="gameAction('gather_moss')">🌿 Собирать лечебный мох</button>`;
+        } else if (cat.mutation > 0 && cat.coals > 0) {
+            specArea.innerHTML = `<button class="btn" style="background:#c0392b; border-color:#962d22;" onclick="gameAction('burn_wound')">🩸 Прижечь заразу углями</button>`;
+        }
+
+        if (cat.location === "Гигантское Дупло" && cat.age_moons < 6) {
+            let questHtml = `<div style="border: 1px dashed #3a1c5c; padding: 10px; margin-top: 10px; border-radius: 6px; background:#0d0d0d;">`;
+            questHtml += `<h5 style="margin:0 0 5px 0; color:#9b59b6; font-size:13px;">💀 Тёмный уголок Смерти:</h5>`;
+            
+            if (cat.quest_step === 1) {
+                questHtml += `<div style="font-size:12px; margin-bottom:5px;"><b>Квест 1:</b> Принеси палку и 4 листочка.<br>(У тебя: Палок: ${cat.sticks}/1, Листьев: ${cat.leaves}/4)</div>`;
+                questHtml += `<button class="btn" style="background:#27ae60; padding:8px; font-size:12px; margin:2px 0;" onclick="gameAction('complete_q1')">🎁 Сдать 1-й квест</button>`;
+            } else if (cat.quest_step === 2) {
+                questHtml += `<div style="font-size:12px; margin-bottom:5px;"><b>Квест 2:</b> Принеси 10 единиц мусора.<br>(У тебя: Мусора: ${cat.trash}/10)</div>`;
+                questHtml += `<button class="btn" style="background:#27ae60; padding:8px; font-size:12px; margin:2px 0;" onclick="gameAction('complete_q2')">🎁 Сдать 2-й квест</button>`;
+            } else if (cat.quest_step === 3) {
+                questHtml += `<div style="font-size:12px; margin-bottom:5px;"><b>Квест 3:</b> Поймай 3 фиолетовых светлячка на стенах.<br>(У тебя: Светлячков: ${cat.fireflies}/3)</div>`;
+                questHtml += `<button class="btn" style="background:#27ae60; padding:8px; font-size:12px; margin:2px 0;" onclick="gameAction('complete_q3')">🎁 Сдать 3-й квест</button>`;
+            } else {
+                questHtml += `<div style="color:#2ecc71; font-size:12px;">🌟 Вы прошли все три квеста Смерти для котят лагеря!</div>`;
+            }
+            
+            questHtml += `<button class="btn" style="background:#16a085; padding:8px; font-size:12px; margin-top:5px;" onclick="gameAction('search_duplo')">🐾 Искать ресурсы на полу лагеря</button>`;
+            questHtml += `</div>`;
+            specArea.innerHTML += questHtml;
+        }
+
+        let navArea = document.getElementById('navigationArea');
+        navArea.innerHTML = "";
+        loc.exits.forEach(exit => {
+            navArea.innerHTML += `<button class="btn-move" onclick="moveTo('${exit}')">🐾 Перейти в: ${exit}</button>`;
+        });
+    }
