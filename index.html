@@ -50,7 +50,7 @@
         "Полянка на Нейтралках": {
             img: "polyanka.png", 
             desc: "Полянка. Вечный мрак. Трава светится ядовито-зеленым, а в небе застыла туманная пыль... Опасно!",
-            exits: ["Старое Гнездо Двуногих", "Подземный Коллектор", "Ствол Дерева"]
+            exits: ["Старое Гнездо Двуногих", "Подземный Коллектор", "Ствол Дерева", "Заброшенная Radioстанция"]
         },
         "Ствол Дерева": {
             img: "stvol.png",
@@ -81,6 +81,11 @@
             img: "nory.png",
             desc: "Опасные подземные туннели вне лагеря Глубинного племени. Здесь абсолютная тьма, но благодаря усам тут стопроцентная охота!",
             exits: ["Подземный Коллектор"]
+        },
+        "Заброшенная Radioстанция": {
+            img: "radiostancia.png",
+            desc: "Старая полуразрушенная вышка Двуногих на самом краю Нейтралок. Кругом протянуты ржавые провода и гудят старые приёмники. Здесь живёт Тэфи (Птичка Радио), которая ловит архивные сигналы и музыку из далёкого прошлого...",
+            exits: ["Полянка на Нейтралках"]
         }
     };
 
@@ -92,7 +97,6 @@
         coals: 0, 
         moss: 0, 
         mutation: 0,
-        // Новая каноничная система времени и квестов
         age_days: 0,
         age_moons: 0,
         sticks: 0,
@@ -110,7 +114,6 @@
         if (save) {
             try {
                 cat = JSON.parse(save);
-                // Проверка на случай старых сохранений без новых полей
                 if (cat.age_days === undefined) cat.age_days = 0;
                 if (cat.age_moons === undefined) cat.age_moons = 0;
                 if (cat.sticks === undefined) cat.sticks = 0;
@@ -173,7 +176,6 @@
 
     function checkHealth() {
         if (cat.has_nest && cat.hunger <= 0) {
-            // Иммунитет к потере здоровья от голода в лагере благодаря гнёздышку
             return false;
         }
         if (cat.hp <= 0) {
@@ -212,13 +214,8 @@
         let hungerBar = document.getElementById('barHunger');
         hungerBar.style.width = cat.hunger + "%";
         
-        // Космический Хвост Смерти при 100% сытости
         if (cat.hunger === 100) {
             hungerBar.style.backgroundColor = "#9400d3";
             hungerBar.style.boxShadow = "0 0 10px #8a2be2, 0 0 15px #ba55d3";
         } else {
-            hungerBar.style.backgroundColor = "#f1c40f";
-            hungerBar.style.boxShadow = "none";
-        }
-
     
