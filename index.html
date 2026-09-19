@@ -296,3 +296,152 @@
             navArea.innerHTML += `<button class="btn-move" onclick="moveTo('${exit}')">🐾 Перейти в: ${exit}</button>`;
         });
     }
+        function moveTo(target) {
+        if (cat.mutation === 3 && !cat.has_toy) { 
+            log("Вы безумны и бегаете кругами во тьме норы!"); 
+            return; 
+        }
+        
+        if (cat.age_moons < 6 && cat.location === "Гигантское Дупло" && target !== "Гигантское Дупло") {
+            log("❌ Королевы строго зашипели на вас и затащили обратно в мох! Котята до 6 лун не могут покидать лагерь.");
+            return;
+        }
+        
+        if (cat.hunger < 5) { 
+            log("❌ Вы слишком ослабли для переходов. Потеряно 10 HP!"); 
+            cat.hp = Math.max(0, cat.hp - 10);
+            if (checkHealth()) return;
+            updateUI();
+            return; 
+        }
+        
+        if (target === "Нижние прочные ветви" && cat.hunger < 25 && Math.random() < 0.4) {
+            cat.hp = Math.max(0, cat.hp - 20);
+            log("🚨 Вы ослабли от голода, лапа поскользнулась на ветке! Вы упали и потеряли 20 HP.");
+            if (checkHealth()) return;
+        }  
+        
+        cat.location = target; 
+        cat.hunger = Math.max(0, cat.hunger - 5);
+        log(`Вы перешли в: ${target}. Потрачено 5 сытости.`);
+        
+        passDay(); 
+        saveGame();
+        updateUI();
+        }
+        function gameAction(type) {
+        if (cat.mutation === 3 && !cat.has_toy) { 
+            log("Вы в полном безумии и не контролируете свои лапы!"); 
+            return; 
+        }
+        
+        if (type === 'hunt') {
+            if (cat.hunger < 10) {
+                log("❌ Вы слишком голодны для охоты! Сначала съешьте мышь.");
+                return;
+            }
+            cat.hunger = Math.max(0, cat.hunger - 10);
+            
+            let successChance = cat.location === "Лабиринт темных нор" ? 0.95 : 0.6;
+            if (Math.random() < successChance) {
+                cat.mice++;
+                log("🐾 Успешная охота! Вы поймали упитанную подземную мышь (+1 в лапы).");
+            } else {
+                log("💨 Охота не удалась. Юркая добыча скрылась во мраке.");
+                if (cat.location === "Полянка на Нейтралках" && Math.random() < 0.2 && cat.mutation === 0) {
+                    cat.mutation = 1;
+                    log("🦠 Из туманной пыли вы подхватили заразу... Развился Черный Кашель!");
+                }
+            }
+        } 
+        else if (type === 'eat') {
+            if (cat.mice > 0) {
+                cat.mice--;
+                cat.hunger = Math.min(100, cat.hunger + 25);
+                log("🍖 Вы съели мышь. Сытость восстановлена на 25 пунктов.");
+            } else {
+                log("❌ У вас нет мышей в лапах. Отправляйтесь на охоту.");
+            }
+        } 
+        else if (type === 'search_coals') {
+            if (Math.random() < 0.7) {
+                cat.coals++;
+                log("🔥 Вы нашли тлеющий уголек в заброшенной печи Двуногих.");
+            } else {
+                log("💨 Вы обыскали всю золу, но ничего не нашли.");
+            }
+            passDay();
+        } 
+        else if (type === 'gather_moss') {
+            cat.moss++;
+            log("🌿 Вы аккуратно собрали пучок лечебного фиолетового мха.");
+            if (cat.mutation === 1 && Math.random() < 0.3) {
+                cat.mutation = 2;
+                log("👁️ Зараза исказила ваше тело... Из лба прорезались ветвистые Рога Хранителя!");
+            } else if (cat.mutation === 2 && Math.random() < 0.2) {
+                cat.mutation = 3;
+                log("💀 Разум помутился от холода ветвей... Мутация перешла в 3 стадию Безумия!");
+            }
+            passDay();
+        } 
+        else if (type === 'burn_wound') {
+            if (cat.coals > 0 && cat.mutation > 0) {
+                cat.coals--;
+                cat.hp = Math.max(10, cat.hp - 15); 
+                cat.mutation = 0;
+                log("🩸 Вы мужественно прижгли заразу углем! Потеряно 15 HP, но болезнь отступила.");
+            }
+        }
+        else if (type === 'search_duplo') {
+            if (cat.hunger < 5) {
+                log("❌ У вас нет сил играть и искать ресурсы на полу лагеря!");
+                return;
+            }
+            cat.hunger = Math.max(0, cat.hunger - 5);
+            let rand = Math.random();
+            
+            if (cat.quest_step === 1) {
+                if (rand < 0.4) { cat.sticks++; log("🪵 Вы нашли на полу Дупла крепкую игровую палочку!"); }
+                else if (rand < 0.8) { cat.leaves++; log("🍃 Вы поймали лапкой упавший с веток листочек!"); }
+                else { log("💨 Вы перерыли весь мох, но ничего интересного не нашли."); }
+            } else if (cat.quest_step === 2) {
+                if (rand < 0.6) { cat.trash++; log("📦 Вы откопали кусок старого мусора Двуногих в углу лагеря!"); }
+                else { log("💨 Вокруг только чистая шёрстка других котят."); }
+            } else if (cat.quest_step === 3) {
+                if (rand < 0.5) { cat.fireflies++; log("🔮 Вы ловко поймали одного фиолетового светлячка со стены!"); }
+                else { log("💨 Светлячок улетел слишком высоко под потолок Дупла."); }
+            }
+            passDay();
+        }
+        else if (type === 'complete_q1') {
+            if (cat.sticks >= 1 && cat.leaves >= 4) {
+                cat.sticks -= 1; cat.leaves -= 4; cat.has_toy = true; cat.quest_step = 2;
+                log("💀 Смерть мудро кивает и протягивает вам Игрушку! Она защитит ваш разум от 3-й стадии безумия.");
+            } else { log("❌ Смерть строго смотрит на вас: 'У тебя не хватает веток или листьев, котеныш.'"); }
+        }
+        else if (type === 'complete_q2') {
+            if (cat.trash >= 10) {
+                cat.trash -= 10; cat.has_costume = true; cat.quest_step = 3;
+                log("💀 Смерть умывает усы и дарит вам Костюм из листиков, ягод и цветов! Вы выглядите мега-нарядно.");
+            } else { log("❌ Смерть качает головой: 'Принеси мне все 10 единиц мусора, чтобы очистить лагерь.'"); }
+        }
+        else if (type === 'complete_q3') {
+            if (cat.fireflies >= 3) {
+                cat.fireflies -= 3; cat.has_nest = true; cat.quest_step = 4;
+                log("💀 Смерть стелет вам Тёплое пуховое гнёздышко! Теперь ваше здоровье защищено от голода, пока вы в лагере.");
+            } else { log("❌ Смерть указывает лапой на стены: 'Жучки ещё летают. Поймай ровно 3 светлячка.'"); }
+        }
+        
+        saveGame();
+        updateUI();
+    }
+
+
+    window.loadGame = loadGame;
+    window.moveTo = moveTo;
+    window.gameAction = gameAction;
+    
+    loadGame();
+</script>
+</body>
+</html>
